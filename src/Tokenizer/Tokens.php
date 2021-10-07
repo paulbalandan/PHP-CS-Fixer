@@ -872,7 +872,8 @@ class Tokens extends \SplFixedArray
                 parent::offsetSet($i + $itemsCount, $oldItem);
             }
 
-            $insertBound = $index - $sliceCount;
+            // adjust $insertBound as tokens between this index and the next index in loop
+            $insertBound = $index - 1;
             $itemsCount -= $sliceCount;
 
             foreach ($slice as $indexItem => $item) {
