@@ -1375,6 +1375,65 @@ $bar;',
         yield [null, 0, -1, '<?php /**/ foo();'];
     }
 
+    /**
+     * @dataProvider provideInsertSlicesAtMultiplePlacesCases
+     *
+     * @param array<int, Token> $slices
+     */
+    public function testInsertSlicesAtMultiplePlaces(string $expected, array $slices): void
+    {
+        $input = <<<'EOF'
+<?php
+
+$after = get_class($after);
+$before = get_class($before);
+EOF;
+
+        $tokens = Tokens::fromCode($input);
+        $tokens->insertSlices([
+            16 => $slices,
+            6 => $slices,
+        ]);
+
+        static::assertSame($expected, $tokens->generateCode());
+    }
+
+    public function provideInsertSlicesAtMultiplePlacesCases(): \Generator
+    {
+        yield 'one slice count' => [
+            <<<'EOF'
+<?php
+
+$after =  get_class($after);
+$before =  get_class($before);
+EOF
+            ,
+            [new Token([T_WHITESPACE, ' '])],
+        ];
+
+        yield 'two slice count' => [
+            <<<'EOF'
+<?php
+
+$after = (string) get_class($after);
+$before = (string) get_class($before);
+EOF
+            ,
+            [new Token([T_STRING_CAST, '(string)']), new Token([T_WHITESPACE, ' '])],
+        ];
+
+        yield 'three slice count' => [
+            <<<'EOF'
+<?php
+
+$after = !(bool) get_class($after);
+$before = !(bool) get_class($before);
+EOF
+            ,
+            [new Token('!'), new Token([T_BOOL_CAST, '(bool)']), new Token([T_WHITESPACE, ' '])],
+        ];
+    }
+
     private static function assertFindBlockEnd(int $expectedIndex, string $source, int $type, int $searchIndex): void
     {
         Tokens::clearCache();
